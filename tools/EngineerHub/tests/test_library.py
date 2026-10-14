@@ -17,7 +17,8 @@ from engineerhub.library import Library, load_library_path, save_library_path
 class LibraryTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(prefix="engineerhub-test-")
-        self.base = Path(self.temp.name)
+        # Windows runners may expose the temp directory through an 8.3 alias.
+        self.base = Path(self.temp.name).resolve()
         self.library = Library(self.base / "工程库")
         self.source = self.base / "升降平台"
         fixtures = {
