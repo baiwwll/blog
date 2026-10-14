@@ -1,0 +1,79 @@
+name: Build Windows tools
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/**'
+      - '.github/scripts/package_tools.py'
+      - '.github/workflows/build-tools.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-tools
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        tool: [EngineerHub, motor_selector]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          architecture: 'x64'
+      - name: Install packaging dependency
+        run: python -m pip install 'pyinstaller==6.22.3'
+      - name: Run core tests
+        working-directory: tools/${{ matrix.tool }}
+        shell: pwsh
+        run: |
+          if ('${{ matrix.tool }}' -eq 'EngineerHub') {
+            python -X utf8 -m unittest discover -s tests -v
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          } else {
+            python -X utf8 tests/test_engine.py
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            python -X utf8 tests/test_library.py
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+      - name: Package Windows application
+        run: python -X utf8 .github/scripts/package_tools.py '${{ matrix.tool }}' --build-root '${{ runner.temp }}/tool-builds'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.tool }}-windows
+          path: release-packages/*.zip
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: release-packages
+          merge-multiple: true
+      - name: Publish Windows download packages
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          COMMIT_SHA: ${{ github.sha }}
+        shell: bash
+        run: |
+          cd release-packages
+          sha256sum *.zip > SHA256SUMS.txt
+          tag="tools-${COMMIT_SHA:0:7}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" *.zip SHA256SUMS.txt --clobber
+          else
+            gh release create "$tag" *.zip SHA256SUMS.txt --target "$COMMIT_SHA" --title "Windows 工程工具" --notes "图纸与工程项目管理 EngineerHub，以及电机选型计算程序。支持 Windows 10/11 64 位；下载 ZIP 后完整解压，保留 _internal 文件夹。源码和使用说明位于 tools/。下载包不包含个人工程库和选型资料。" --latest
+          fi

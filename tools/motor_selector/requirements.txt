@@ -1,0 +1,7 @@
+# 本程序运行**不需要**任何第三方库（只用 Python 标准库 + tkinter）。
+#
+# 仅在需要打包成 exe 时才需要安装：
+pyinstaller>=6.0
+
+# 运行程序：      python main.py
+# 打包成单文件：  powershell -ExecutionPolicy Bypass -File .\build_exe.ps1
